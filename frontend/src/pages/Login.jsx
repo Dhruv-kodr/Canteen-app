@@ -1,12 +1,65 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
 
+
+    const navigate = useNavigate();
+
     const formHandeler =(e)=>{
         e.preventDefault();
+        const email = e.target[0].value;
+        const password = e.target[1].value;
+        axios.post("http://localhost:3000/api/auth/login",{
+            email,
+            password
+        },{ withCredentials: true })
+        .then(res => {
+            console.log(res.data);
+            localStorage.setItem("token", res.data.token);
+            navigate("/");
+
+            e.target[0].value = "";
+            e.target[1].value = "";
+        })
+        .catch(err => {
+            console.log(err.response?.data?.message || "Login failed");
+             e.target[0].value = "";
+            e.target[1].value = "";
+        })
     }
+
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/api/auth/google-login",
+        {
+          tokenId: credentialResponse.credential,
+        },
+        { withCredentials: true }
+      );
+
+      console.log(res.data);
+
+      // optional: localStorage (if needed)
+      localStorage.setItem("token", res.data.token);
+
+      // role based redirect
+      if (res.data.userData.role === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/");
+
+      }
+
+    } catch (error) {
+      console.log(error.response?.data?.message || "Google login failed");
+    }
+  }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center  bg-gray-800 text-white px-4">
@@ -15,7 +68,7 @@ const Login = () => {
         <h2 className="text-3xl font-bold text-center mb-6">Login</h2>
 
         {/* Form */}
-        <form onSubmit={formHandeler} className="space-y-4">
+        <form onSubmit={formHandeler}  className="space-y-4">
           {/* Email */}
           <div>
             <label className="block text-sm mb-1">Email</label>
@@ -54,9 +107,7 @@ const Login = () => {
 
         {/* Google Login */}
         <GoogleLogin
-          onSuccess={(credentialResponse) => {
-            console.log(credentialResponse);
-          }}
+          onSuccess={handleGoogleLogin}
           onError={() => {
             console.log("Login Failed");
           }}

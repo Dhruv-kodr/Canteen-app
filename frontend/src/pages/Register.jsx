@@ -1,11 +1,35 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 const Register = () => {
-
+  const navigate = useNavigate();
     const formHandeler =(e)=>{
         e.preventDefault();
+        const name = e.target[0].value;
+        const email = e.target[1].value;
+        const password = e.target[2].value;
+
+        axios.post("http://localhost:3000/api/auth/register",{
+            name,
+            email,
+            password
+        })
+        .then(res => {
+            console.log(res.data);
+            navigate("/login");
+
+            e.target[0].value = "";
+            e.target[1].value = "";
+            e.target[2].value = "";
+        })
+        .catch(err => {
+            console.log(err.response?.data?.message || "Registration failed");
+            e.target[0].value = "";
+            e.target[1].value = "";
+            e.target[2].value = "";
+        })
     }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-800 text-white px-4">

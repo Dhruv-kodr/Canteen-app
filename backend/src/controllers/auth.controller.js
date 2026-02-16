@@ -1,87 +1,108 @@
-const userModel = require('../models/authUser.model')
-const jwt = require('jsonwebtoken')
-const bcrypt = require('bcryptjs')
+const User = require("../models/authUser.model");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
+/* ============ LOGIN ============ */
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-async function login(req,res) {
-    const { email, password } = req.body || {};
-    if (!email || !password) {
-    return res.status(400).json({ message: "Email and password required" });
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const isUserExist = await userModel.findOne({email})
-    if(!isUserExist){
-        return res.status(400).json({
-            message:"Invalid email or password"
-        });
+    // Google user check
+    if (!user.password) {
+      return res.status(400).json({
+        message: "Please login using Google"
+      });
     }
 
-    const isPasswordValid =await bcrypt.compare(password,isUserExist.password)
-
-    if(!isPasswordValid){
-        return res.status(400).json({
-            message:"Invalid email or password"
-        });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({
-        id:isUserExist._id
-    },process.env.SECRET)
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-    res.cookie("token",token)
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
 
     res.status(200).json({
-        message:"User Login Succesfully",
-        user:{
-            id:isUserExist._id,
-            email:isUserExist.email,
-            username:isUserExist.username
-        }
-    })
+      message: "Login successful",
+      token,
+      userData: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
 
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
-}
+/* ============ REGISTER ============ */
+const RegisterUser = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-async function register(req,res){
-    
-    const { username , email, password } = req.body;
+    const existingUser = await User.findOne({
+      email: email.toLowerCase(),
+    });
 
-    
-
-    const existUser = await userModel.findOne({email})
-    if(existUser){
-        return res.status(400).json({
-            message:"User Already Exist"
-        })
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
     }
 
-    const hassedPassword =await bcrypt.hash(password,10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await userModel.create({
-        username,
-        email,
-        password:hassedPassword
-    })
+    const user = await User.create({
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+    });
 
-    const token = jwt.sign({
-        id:newUser._id
-    },process.env.SECRET)
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-    res.cookie("token",token)
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
 
-    return res.status(201).json({
-        message:"User Created",
-        user:{
-            id:newUser._id,
-            username:newUser.username,
-            email:newUser.email
-        }
-    })
+    res.status(201).json({
+      message: "Registration successful",
+      token,
+      userData: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
 
-    
-}
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 module.exports = {
-    login,
-    register
-}
+  loginUser,
+  RegisterUser,
+};

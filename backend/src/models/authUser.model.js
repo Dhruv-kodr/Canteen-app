@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
-    username:{
+    name:{
         type:String,
         required:true
     },
@@ -12,9 +12,21 @@ const userSchema = new mongoose.Schema({
     },
     password:{
         type:String,
-        required:true
+        required: function() {
+            return !this.googleId;
+        }
     },
-})
+    role:{
+        type:String,
+        enum:['admin','user'],
+        default:'user'
+    },
+    googleId:{
+        type:String,
+        default:null
+    }
+},{timestamps:true}
+)
 
 const userModel = mongoose.model('user',userSchema)
 
