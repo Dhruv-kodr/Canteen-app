@@ -15,6 +15,7 @@ const foodManageSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
+      enum:["fastFood","veg","nonVeg"]
     },
 
     description: {
@@ -31,6 +32,7 @@ const foodManageSchema = new mongoose.Schema(
       type: String, // video path / URL
       required: true,
     },
+    
   },
   { timestamps: true }
 );

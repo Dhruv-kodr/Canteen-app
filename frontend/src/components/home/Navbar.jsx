@@ -1,16 +1,31 @@
 import { GiHamburgerMenu } from 'react-icons/gi'
 import { Link } from 'react-router-dom'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react';
 
 const Navbar = () => {
 
   const [isOpen, setIsOpen] =useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   return (
     <>
-    <div className='absolute top-0 left-0 w-full z-50  text-white text-xl'>
-    <div className='px-8 py-4 flex  flex-wrap justify-between items-center sticky top-0'>
-      <div style={{fontFamily:"cursive"}} className='text-2xl italic bg-amber-400 ps-8 pr-10 py-1 rounded-r-sm  rounded-t-4xl text-center '>GLI Canteen</div>
+    
+   
+    <div className={`px-8 py-4 flex flex-wrap justify-between items-center fixed top-0 w-full text-white font-bold transition-all duration-500 ease-in-out ${scrolled 
+        ? "backdrop-blur-md bg-black/40 py-3 shadow-lg" 
+        : "bg-transparent py-6"}`}>
+      <div style={{fontFamily:"cursive"}} className='text-2xl text-gray-800 italic bg-amber-400 ps-8 pr-10 py-1 rounded-r-sm  rounded-t-4xl text-center '>GLI Canteen</div>
       <div className='flex justify-end items-center gap-10 lg:flex hidden'>
         <Link to='/' className='font-medium text-lg cursor-pointer active:scale-95 hover:text-amber-400' >Home</Link>
         <Link to='/login' className='font-medium text-lg cursor-pointer active:scale-95 hover:text-amber-400 duration-300' >Login</Link>
@@ -39,7 +54,7 @@ const Navbar = () => {
           
         </div>
     </div>
-    </div>
+  
     </>
   )
 }

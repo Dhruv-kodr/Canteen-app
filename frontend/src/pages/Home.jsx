@@ -4,8 +4,8 @@ import MainPart from '../components/home/MainPart'
 
 const Home = () => {
   return (
-    <div className='min-h-screen bg-lime-50 text-black' >
-      <Navbar/>
+    <div className='min-h-screen text-black' >
+      {/* <Navbar/> */}
       <MainPart/>
     </div>
   )
